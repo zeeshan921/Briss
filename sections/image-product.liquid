@@ -1,0 +1,280 @@
+<style>
+    .container-{{ section.id }} {
+        width: 100%;
+        margin: 0 auto;
+        display: flex;
+        gap: 30px;
+    }
+    .container.main-tsf-class-included {
+        display: flex;
+    }
+    .left-section-{{ section.id }} {
+        flex: 1;
+        position: relative;
+    }
+    .main-image-{{ section.id }} {
+        width: auto;
+        height: auto;
+        position: relative;
+    }
+    
+    .main-image-{{ section.id }} img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 12px;
+    }
+    
+    .brand-name-{{ section.id }} {
+        position: absolute;
+        bottom: 40px;
+        left: 40px;
+        font-size: 120px;
+        font-weight: 300;
+        font-family: Braun Linear, sans-serif;
+        color: {{ section.settings.brand_text_color }};
+        letter-spacing: -2px;
+        line-height: 0.8;
+    }
+    
+    .right-section-{{ section.id }} {
+        flex: 1;
+    }
+    
+    .rating-{{ section.id }} {
+        margin-left: 0;
+        width: 100%;
+        display: flex;
+        gap: 20px;
+    }
+    
+    .star-{{ section.id }} {
+        width: 27px;
+        height: 27px;
+    }
+    
+    .testimonial-{{ section.id }} {
+        font-size: 24px;
+        font-weight: 600;
+        color: {{ section.settings.testimonial_color }};
+        padding: 18px 0px 10px 0px;
+        line-height: 1.3;
+        font-family: Braun Linear, sans-serif;
+    }
+    
+    .author-{{ section.id }} {
+        font-size: 20px;
+        color: {{ section.settings.author_color }};
+        margin-bottom: 30px;
+        font-weight: 400;
+        font-family: Braun Linear, sans-serif;
+    }
+    
+    .products-{{ section.id }} {
+        display: flex;
+        gap: 20px;
+    }
+    .products-{{ section.id }}.custom-tsf-class .product-item {
+        width: 50%;
+    }
+    @media (min-width: 720px) {
+    .left-section-{{ section.id }} {
+        width: 48.75%;
+        margin-right: 2.5%;
+        flex-shrink: 0;
+    }
+    }
+    @media (max-width: 768px) {
+        .container-{{ section.id }} {
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .brand-name-{{ section.id }} {
+            font-size: 80px;
+            bottom: 20px;
+            left: 20px;
+        }
+        
+        .rating-{{ section.id }}, 
+        .author-{{ section.id }},
+        .testimonial-{{ section.id }} {
+            display: none;
+        }
+    }
+    @media (max-width: 768px) {
+        .container.main-tsf-class-included {
+            flex-direction: column;
+        }
+        .products-{{ section.id }}.custom-tsf-class {
+            padding-top: 16px;
+        }
+    }
+</style>
+
+<div class="container main-tsf-class-included">
+    <div class="left-section-{{ section.id }}">
+        <div class="main-image-{{ section.id }}">
+            {% if section.settings.main_image %}
+                <img src="{{ section.settings.main_image | img_url: 'master' }}" alt="{{ section.settings.brand_text }}">
+            {% endif %}
+            {% comment %} <div class="brand-name-{{ section.id }}">{{ section.settings.brand_text }}</div> {% endcomment %}
+        </div>
+    </div>
+    
+    <div class="right-section-{{ section.id }}">
+        <div class="rating-{{ section.id }}">
+            {% for block in section.blocks %}
+                {% if block.type == 'star' %}
+                    <span class="star-{{ section.id }}">
+                        <img src="{{ block.settings.star_img | img_url: 'master' }}" alt="star">
+                    </span>
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        <div class="testimonial-{{ section.id }}">"{{ section.settings.testimonial_text }}"</div>
+        <div class="author-{{ section.id }}">{{ section.settings.author_name }}</div>
+        
+        <div class="products-{{ section.id }} custom-tsf-class">
+            {% if section.settings.collection != blank %}
+                {% assign selected_collection = collections[section.settings.collection] %}
+                {% assign sizes_attribute = '(max-width: 699px) 100vw, (max-width: 999px) 50vw, 33vw' %}
+                
+                {% if selected_collection.products.size > 0 %}
+                    {% for product in selected_collection.products limit: 2 %}
+                        {%- render 'product-items',
+                            product: product,
+                            collection: selected_collection,
+                            show_cta: section.settings.show_cta,
+                            sizes_attribute: sizes_attribute,
+                            reveal: settings.stagger_products_apparition
+                        -%}
+                    {% endfor %}
+                {% else %}
+                    <p>No products found in this collection.</p>
+                {% endif %}
+            {% else %}
+                <p>Please select a collection in the theme editor.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.color-swatch').forEach(swatch => {
+    swatch.addEventListener('click', function() {
+        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
+
+document.addEventListener('click', function(e){
+    const sw = e.target.closest('.color-swatch');
+    if(!sw) return;
+
+    const productCard = sw.closest('.product-card');
+    const imageEl = productCard.querySelector('.product-img');
+    if(imageEl){
+        imageEl.src = sw.dataset.image;
+    }
+});
+</script>
+
+{% schema %}
+{
+  "name": "Fashion Section",
+  "settings": [
+    {
+       "type": "checkbox",
+       "id": "show_cta",
+       "label": "Show Call To Action",
+       "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "main_image",
+      "label": "Main Image"
+    },
+    {
+      "type": "text",
+      "id": "brand_text",
+      "label": "Brand Text",
+      "default": "nüski"
+    },
+    {
+      "type": "color",
+      "id": "brand_text_color",
+      "label": "Brand Text Color",
+      "default": "rgba(255, 255, 255, 0.8)"
+    },
+    {
+      "type": "color",
+      "id": "star_color",
+      "label": "Star Rating Color",
+      "default": "#c5a572"
+    },
+    {
+      "type": "textarea",
+      "id": "testimonial_text",
+      "label": "Testimonial Text"
+    },
+    {
+      "type": "color",
+      "id": "testimonial_color",
+      "label": "Testimonial Text Color",
+      "default": "#333"
+    },
+    {
+      "type": "text",
+      "id": "author_name",
+      "label": "Author Name",
+      "default": "Maria Liefmans"
+    },
+    {
+      "type": "color",
+      "id": "author_color",
+      "label": "Author Text Color",
+      "default": "#102b26"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Select Collection"
+    },
+    {
+      "type": "url",
+      "id": "product_url",
+      "label": "Product Url"
+    },
+    {
+      "type": "image_picker",
+      "id": "cart_img",
+      "label": "Cart Image"
+    },
+    {
+      "type": "url",
+      "id": "cart_url",
+      "label": "Cart Url"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "star",
+      "name": "Star",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "star_img",
+          "label": "Star Image"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Fashion Section"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,1010 @@
+{%- comment -%}
+  ------------------------------------------------------------------------------------------------------------------------
+  NOTE TO DEVELOPERS: welcome to Focal theme! We hope that you will enjoy editing this theme as much as we did for
+    developing it. We have put a lot of work to make this theme as developer friendly as possible by offering you
+    hooks to integrate into critical parts of the theme. You will find the complete technical documentation (including
+    all events, dependencies...) in the "custom.js" file, located in the Assets folder.
+  ------------------------------------------------------------------------------------------------------------------------
+{%- endcomment -%}
+
+<!doctype html>
+
+{%- assign direction = 'ltr' -%}
+{%- case request.locale.iso_code -%}
+  {%- when 'ar', 'arc', 'dv', 'fa', 'ha', 'he', 'kwh', 'ks', 'ku', 'ps', 'ur', 'yi' -%}
+    {%- assign direction = 'rtl' -%}
+{%- endcase -%}
+
+<html class="no-js" lang="{{ request.locale.iso_code }}" dir="{{ direction }}">
+  <head>
+    <meta charset="utf-8">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=1.0"
+    >
+    <meta name="theme-color" content="{{ settings.header_background }}">
+
+    <title>
+      {% if page_title == blank -%}
+        {{- shop.name -}}
+      {%- else -%}
+        {{- page_title -}}
+        {%- if current_page != 1 %} &ndash; {{ 'general.meta.page' | t: page: current_page }}{% endif -%}
+      {%- endif %}
+    </title>
+
+    {%- if page_description -%}
+      <meta name="description" content="{{ page_description | escape }}">
+    {%- endif -%}
+
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    {%- if settings.favicon -%}
+      <link rel="shortcut icon" href="{{ settings.favicon | image_url: width: 96 }}" type="image/png">
+    {%- endif -%}
+
+    {%- comment -%}Few prefech to increase performance on commonly used third-parties{%- endcomment -%}
+    <link rel="preconnect" href="https://cdn.shopify.com">
+    <link rel="dns-prefetch" href="https://productreviews.shopifycdn.com">
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+
+    {%- unless settings.heading_font.system? and settings.text_font.system? -%}
+      <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
+    {%- endunless -%}
+
+    {%- comment -%}Preload important resources{%- endcomment -%}
+    <link rel="preload" as="style" href="{{ 'theme.css' | asset_url }}">
+    <link rel="preload" as="script" href="{{ 'vendor.js' | asset_url }}">
+    <link rel="preload" as="script" href="{{ 'theme.js' | asset_url }}">
+
+    {%- comment -%}
+      IMPLEMENTATION NOTE: for improving performance, Focal tries to preload images on known pages (such as blog page,
+      product or collection pages). In order to keep a main JS file size minimal, the theme also lazyloads non-essential
+      libraries (such as PhotoSwipe or Flickity) and only loads them on demand.
+    {%- endcomment -%}
+    {%- if request.page_type == 'product' -%}
+      {%- assign selected_media = product.selected_variant.featured_media | default: product.featured_media -%}
+
+      <link rel="preload" as="fetch" href="{{ product.url }}.js" crossorigin>
+
+      {%- if product.media.size > 1 -%}
+        <link rel="preload" as="script" href="{{ 'flickity.js' | asset_url }}">
+      {%- endif -%}
+    {%- endif -%}
+
+    {% render 'social-meta-tags' %}
+    {% render 'microdata-schema' %}
+    {% render 'css-variables', direction: direction %}
+    {% render 'js-variables', direction: direction %}
+
+    <link rel="stylesheet" href="{{ 'theme.css' | asset_url }}">
+
+    <script src="{{ 'vendor.js' | asset_url }}" defer></script>
+    <script src="{{ 'theme.js' | asset_url }}" defer></script>
+    <script src="{{ 'custom.js' | asset_url }}" defer></script>
+
+    {{ content_for_header }}
+  </head>
+
+  {%- assign feature_classes = '' -%}
+
+  {%- if settings.show_image_zoom -%}
+    {% assign feature_classes = feature_classes | append: ' features--image-zoom' %}
+  {%- endif -%}
+
+  <body class="no-focus-outline {{ feature_classes }}" data-instant-allow-query-string>
+    {%- comment -%}Common SVG definitions that we are re-using in several places{%- endcomment -%}
+    <svg class="visually-hidden">
+      <linearGradient id="rating-star-gradient-half">
+        <stop offset="50%" stop-color="rgb(var(--product-star-rating))" />
+        <stop offset="50%" stop-color="rgb(var(--product-star-rating))" stop-opacity="0.4" />
+      </linearGradient>
+    </svg>
+
+    <a href="#main" class="visually-hidden skip-to-content">{{ 'general.accessibility.skip_to_content' | t }}</a>
+    <loading-bar class="loading-bar"></loading-bar>
+
+    {%- if request.page_type != 'gift_card' and request.page_type != 'password' -%}
+      {%- sections 'header-group' -%}
+      {%- sections 'overlay-group' -%}
+
+      {%- unless settings.cart_type == 'page' or request.page_type == 'cart' -%}
+        {%- section 'mini-cart' -%}
+      {%- endunless -%}
+    {%- endif -%}
+
+    <div id="main" role="main" class="anchor">
+      {%- comment -%}
+        IMPLEMENTATION NOTE: on collection and search page, the theme was designed to show on mobile the filter bar and/or sort
+          by at the very top of the page. However, due to the fact that sections are isolated, I had to move the code
+          here. Then, the collection section, based on the selected settings, will eventually hide those elements in CSS
+      {%- endcomment -%}
+      {%- if request.page_type == 'collection' or request.page_type == 'search' -%}
+        {%- assign active_filters_count = 0 -%}
+
+        {%- if request.page_type == 'collection' -%}
+          {%- assign filters = collection.filters -%}
+        {%- else -%}
+          {%- assign filters = search.filters -%}
+        {%- endif -%}
+
+        {%- for filter in filters -%}
+          {%- if filter.type == 'list' -%}
+            {%- assign active_filters_count = active_filters_count | plus: filter.active_values.size -%}
+          {%- elsif filter.type == 'price_range' and filter.min_value.value or filter.max_value.value -%}
+            {%- assign active_filters_count = active_filters_count | plus: 1 -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- assign is_toolbar_collapsed = false -%}
+
+        {%- if request.page_type == 'search'
+          and search.results.first.object_type != 'product'
+          and search.results_count > 0
+        -%}
+          {%- assign is_toolbar_collapsed = true -%}
+        {%- endif -%}
+
+        <div
+          id="mobile-facet-toolbar"
+          class="mobile-toolbar {% if is_toolbar_collapsed %}is-collapsed{% endif %} hidden-lap-and-up"
+        >
+          <button
+            is="toggle-button"
+            class="mobile-toolbar__item mobile-toolbar__item--filters {% if active_filters_count > 0 %}has-filters{% endif %}"
+            aria-expanded="false"
+            aria-controls="facet-filters"
+            style="display: none"
+          >
+            {%- render 'icon' with 'filters' -%}
+            <span class="mobile-toolbar__item-label">{{- 'collection.general.filters' | t -}}</span>
+          </button>
+
+          <button
+            is="toggle-button"
+            class="mobile-toolbar__item mobile-toolbar__item--sort"
+            aria-expanded="false"
+            aria-controls="sort-by-popover"
+            style="display: none"
+          >
+            <span class="mobile-toolbar__item-label">{{- 'collection.general.sort_by' | t -}}</span>
+            {%- render 'icon' with 'chevron' -%}
+          </button>
+        </div>
+      {%- endif -%}
+
+      {{ content_for_layout }}
+    </div>
+
+    {%- if request.page_type != 'gift_card' and request.page_type != 'password' -%}
+      {%- section 'custom-features' -%}
+      {%- sections 'footer-group' -%}
+    {%- endif -%}
+    {% comment %}
+      Add this code to your theme.liquid file before </body> tag
+      This will create a dynamic quick view modal for all products
+    {% endcomment %}
+
+    <!-- Quick View Modal -->
+    {% comment %}
+      ===========================================
+      STEP 1: Add this to theme.liquid BEFORE </body>
+      ===========================================
+    {% endcomment %}
+
+    <!-- Quick View Modal -->
+    <div class="quick-view-modal" id="quickViewModal" style="display: none;">
+      <div class="quick-view-overlay"></div>
+      <div class="quick-view-content">
+        <button class="quick-view-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+
+        <div class="quick-view-loading">
+          <div class="spinner"></div>
+        </div>
+
+        <div class="quick-view-body" style="display: none;">
+          <div class="quick-view-images">
+            <div class="quick-view-main-image">
+              <a href="#" id="quickViewMainLink" class="">
+                <img src="" alt="" id="quickViewMainImage" height="" width="">
+              </a>
+            </div>
+          </div>
+
+          <div class="quick-view-details">
+            <div class="quick-view-header">
+              <span class="quick-view-badge" id="quickViewBadge" style="display: none;"></span>
+              <h2 class="quick-view-title" id="quickViewTitle"></h2>
+              <p class="quick-view-vendor" id="quickViewVendor"></p>
+              <div class="quick-view-price-wrapper">
+                <div class="quick-view-price" id="quickViewPrice"></div>
+              </div>
+            </div>
+
+            <form id="quickViewForm" class="quick-view-form">
+              <input type="hidden" name="id" id="quickViewVariantId">
+              <input type="hidden" name="quantity" id="quickViewQuantity" value="1">
+              <input type="hidden" name="id" id="quickViewVariantId">
+              <div class="quick-view-variants" id="quickViewVariants"></div>
+
+              <div class="quick-view-quantity">
+                <div class="quantity-selector">
+                  <button type="button" class="quantity-btn" onclick="updateQuantity(-1)">−</button>
+                  <input type="number" id="quickViewQuantity" name="quantity" value="1" min="1" readonly>
+                  <button type="button" class="quantity-btn" onclick="updateQuantity(1)">+</button>
+                </div>
+              </div>
+
+              <div class="quick-view-description" id="quickViewDescription"></div>
+              <button type="submit" class="btn-add-to-cart" id="quickViewAddToCart">
+                <span class="btn-text">Tilføj til kurv</span>
+                <span class="btn-loading" style="display: none;">Adding...</span>
+              </button>
+            </form>
+
+            <div class="quick-view-specs" id="quickViewSpecs"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .quick-view-btn {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      background: white;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 5;
+      }
+
+      .quick-view-btn:hover {
+      background: #f5f5f5;
+      transform: scale(1.1);
+      }
+
+      .quick-view-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 99999;
+      display: none;
+      }
+
+      .quick-view-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      animation: fadeIn 0.3s ease;
+      }
+
+      .quick-view-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      max-width: 900px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+      }
+
+      @keyframes slideUp {
+      from {
+      opacity: 0;
+      transform: translate(-50%, -45%);
+      }
+      to {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+      }
+      }
+
+      .quick-view-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: transparent;
+      border: none;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: opacity 0.3s ease;
+      }
+
+      .quick-view-close svg {
+      width: 35px;
+      height: 35px;
+      color: #102b26;
+      }
+
+      .quick-view-close:hover {
+      opacity: 0.6;
+      }
+
+      .quick-view-loading {
+      padding: 80px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      }
+
+      .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #f0f0f0;
+      border-top-color: #333;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+      to { transform: rotate(360deg); }
+      }
+
+      .quick-view-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      }
+
+      .quick-view-images {
+      padding: calc(4px *4);
+      }
+      .quick-view-main-image {
+      position: relative;
+      padding-top: 130%;
+      border-radius: 10px;
+      overflow: hidden;
+      }
+      .quick-view-main-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      }
+
+      .quick-view-details {
+      padding: calc(4px *4);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding-left: 5px;
+      }
+
+      .quick-view-header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e0e0e0;
+      }
+
+      .quick-view-badge {
+      background: #ff6b6b;
+      color: white;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 3px;
+      align-self: flex-start;
+      }
+
+      .quick-view-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #102B26;
+      margin: 0;
+      line-height: 1.3;
+      margin-top:30px;
+      }
+
+      .quick-view-vendor {
+      color: #102b26;
+      font-size: 16px;
+      margin: 0;
+      }
+      p#quickViewVendor a {
+      text-decoration: none;
+      }
+
+      .quick-view-price {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      color:red;
+      }
+
+      .quick-view-price .price--compare {
+      color: #000;
+      text-decoration: line-through;
+      }
+
+      .quick-view-description {
+      color: #102b26;
+      line-height: 1.6;
+      font-size: 16px;
+      }
+
+      .quick-view-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      }
+
+      .quick-view-variants {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      }
+
+      .variant-option {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      }
+
+      .variant-option label {
+      font-weight: 700;
+      color: #102b26;
+      font-size: 16px;
+      }
+
+      .variant-label-selected {
+      font-weight: 400;
+      }
+
+      .variant-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      }
+
+      .variant-btn {
+      padding: 8px 20px;
+      border: 1px solid #bdbfbf;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 16px;
+      color: #102b26;
+      font-weight: 500;
+      min-width: 125px;
+      text-align: center;
+      }
+
+      .variant-btn:hover:not(:disabled) {
+      border-color: #102b26;
+      }
+
+      .variant-btn.active {
+      border: 2px solid #102b26;
+      }
+
+      .variant-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      text-decoration: line-through;
+      }
+
+      .variant-color-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      }
+
+      .variant-color-btn {
+      width: 50px;
+      height: 50px;
+      border: 2px solid #d0d0d0;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-size: cover;
+      background-position: center;
+      }
+
+      .variant-color-btn:hover {
+      border-color: #1a1a1a;
+      }
+
+      .variant-color-btn.active {
+      border-color: #1a1a1a;
+      border-width: 3px;
+      }
+
+      .quantity-selector {
+      display: flex;
+      align-items: center;
+      border: 1px solid #bdbfbf;
+      border-radius: 0;
+      overflow: hidden;
+      width: fit-content;
+      }
+      .quantity-selector:hover{
+      border-color: #1a1a1a;
+      }
+      .quantity-btn {
+      padding: 10px 15px;
+      border: none;
+      background: white;
+      cursor: pointer;
+      font-size: 18px;
+      color: #102b26;
+      }
+
+      .quantity-btn:hover {
+      background: rgb(232 232 232 / 60%);
+      }
+
+      #quickViewQuantity {
+      width: 50px;
+      text-align: center;
+      border: none;
+      font-size: 16px;
+      font-weight: 500;
+      }
+
+      .btn-add-to-cart {
+      width: 100%;
+      padding: 18px;
+      background: #000;
+      color: white;
+      border: none;
+      border-radius: 0;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      text-align: center;
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin-left: auto;
+      }
+
+      .btn-add-to-cart:hover:not(:disabled) {
+      background: #000;
+      }
+
+      .btn-add-to-cart:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      }
+
+      .quick-view-specs {
+      font-size: 13px;
+      line-height: 1.8;
+      color: #666;
+      }
+
+      @media (max-width: 768px) {
+      .variant-btn {
+      padding: 6px;
+      font-size: 14px;
+      min-width: 70px;
+      }
+      .quick-view-details {
+      padding-left: 15px;
+      }
+      .quick-view-body {
+      grid-template-columns: 1fr;
+      }
+      }
+    </style>
+
+    <script>
+      (function () {
+        class QuickView {
+          constructor() {
+            this.modal = document.getElementById('quickViewModal');
+            if (!this.modal) {
+              console.error('Quick view modal not found');
+              return;
+            }
+
+            this.loading = this.modal.querySelector('.quick-view-loading');
+            this.body = this.modal.querySelector('.quick-view-body');
+            this.currentProduct = null;
+            this.variantImages = {};
+            this.init();
+          }
+
+          init() {
+            document.addEventListener('click', (e) => {
+              const btn = e.target.closest('.quick-view-btn');
+              if (btn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const handle = btn.getAttribute('data-product-handle');
+                if (handle) {
+                  console.log('Opening quick view for:', handle);
+                  this.open(handle);
+                }
+              }
+            });
+
+            const closeBtn = this.modal.querySelector('.quick-view-close');
+            if (closeBtn) {
+              closeBtn.addEventListener('click', () => this.close());
+            }
+
+            const overlay = this.modal.querySelector('.quick-view-overlay');
+            if (overlay) {
+              overlay.addEventListener('click', () => this.close());
+            }
+
+            document.addEventListener('keydown', (e) => {
+              if (e.key === 'Escape' && this.modal.style.display === 'block') {
+                this.close();
+              }
+            });
+
+            const form = document.getElementById('quickViewForm');
+            if (form) {
+              form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.addToCart();
+              });
+            }
+          }
+
+          async open(handle) {
+            this.modal.style.display = 'block';
+            this.loading.style.display = 'flex';
+            this.body.style.display = 'none';
+            document.body.style.overflow = 'hidden';
+
+            try {
+              console.log('Fetching product with handle:', handle);
+
+              let response = await fetch(`/products/${handle}.js`);
+
+              if (!response.ok) {
+                console.log('First endpoint failed, trying alternative...');
+                response = await fetch(`/products/${handle}?view=json`);
+              }
+
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status} - URL: /products/${handle}.js`);
+              }
+
+              const product = await response.json();
+              console.log('Product loaded successfully:', product);
+
+              if (!product || !product.id) {
+                throw new Error('Invalid product data received');
+              }
+
+              this.currentProduct = product;
+              this.renderProduct(product);
+
+              this.loading.style.display = 'none';
+              this.body.style.display = 'grid';
+            } catch (error) {
+              console.error('Detailed error:', {
+                message: error.message,
+                handle: handle,
+                error: error,
+              });
+
+              const errorMsg = `Error: ${error.message}\nProduct Handle: ${handle}\n\nPlease check console for details.`;
+              alert(errorMsg);
+              this.close();
+            }
+          }
+
+          close() {
+            this.modal.style.display = 'none';
+            document.body.style.overflow = '';
+            this.currentProduct = null;
+            this.variantImages = {};
+          }
+
+          renderProduct(product) {
+            document.getElementById('quickViewTitle').textContent = product.title;
+
+            // 🔥 Vendor dynamic link
+            const vendorEl = document.getElementById('quickViewVendor');
+            if (vendorEl) {
+              vendorEl.innerHTML = `
+          <a href="/collections/vendors?q=${encodeURIComponent(product.vendor)}" 
+             title="${product.vendor}">
+             ${product.vendor}
+          </a>
+        `;
+            }
+
+            const badge = document.getElementById('quickViewBadge');
+            if (product.compare_at_price && product.compare_at_price > product.price) {
+              const savings = ((product.compare_at_price - product.price) / 100).toFixed(2);
+              badge.textContent = `Save ${savings}`;
+              badge.style.display = 'inline-block';
+            } else {
+              badge.style.display = 'none';
+            }
+
+            const priceDiv = document.getElementById('quickViewPrice');
+            const price = (product.price / 100).toFixed(2);
+            const comparePrice = product.compare_at_price ? (product.compare_at_price / 100).toFixed(2) : null;
+
+            if (comparePrice && comparePrice > price) {
+              priceDiv.innerHTML = `
+          <span class="price--compare">${comparePrice}</span>
+          <span class="price--sale">${price}</span>
+        `;
+            } else {
+              priceDiv.innerHTML = `<span>${price}</span>`;
+            }
+
+            const descDiv = document.getElementById('quickViewDescription');
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = product.description || '';
+            const descText = tempDiv.textContent || '';
+            descDiv.textContent = descText.length > 5000 ? descText.substring(0, 5000) + '...' : descText;
+
+            this.renderFeaturedImage(product);
+            this.buildVariantImageMap(product);
+            this.renderVariants(product.variants, product.options);
+          }
+
+          // 🔥 Updated: main image src, alt, and link
+          renderFeaturedImage(product) {
+            const mainImage = document.getElementById('quickViewMainImage');
+            const mainLink = document.getElementById('quickViewMainLink'); // <a id="quickViewMainLink">
+
+            let imgSrc = '';
+            if (product.featured_image) {
+              imgSrc = product.featured_image;
+            } else if (product.images && product.images.length > 0) {
+              imgSrc = product.images[0];
+            }
+
+            if (mainImage) {
+              mainImage.src = imgSrc;
+              mainImage.alt = product.title;
+            }
+
+            if (mainLink) {
+              mainLink.href = `/products/${product.handle}`;
+            }
+          }
+
+          buildVariantImageMap(product) {
+            product.variants.forEach((variant) => {
+              if (variant.featured_image && variant.featured_image.src) {
+                const key = variant.option1 || variant.option2 || variant.option3;
+                if (key) {
+                  this.variantImages[key] = variant.featured_image.src;
+                }
+              }
+            });
+          }
+
+          changeMainImage(src) {
+            document.getElementById('quickViewMainImage').src = src;
+          }
+
+          renderVariants(variants, options) {
+            const variantsDiv = document.getElementById('quickViewVariants');
+            variantsDiv.innerHTML = '';
+
+            if (variants.length === 1 && variants[0].title === 'Default Title') {
+              document.getElementById('quickViewVariantId').value = variants[0].id;
+              return;
+            }
+
+            options.forEach((option, optionIndex) => {
+              const values = [...new Set(variants.map((v) => v.options[optionIndex]))];
+              const optionDiv = document.createElement('div');
+              optionDiv.className = 'variant-option';
+
+              const optionName = typeof option === 'string' ? option : option.name || option;
+              const isColorOption =
+                optionName.toLowerCase().includes('color') ||
+                optionName.toLowerCase().includes('farve') ||
+                optionName.toLowerCase().includes('colour');
+
+              if (isColorOption && Object.keys(this.variantImages).length > 0) {
+                optionDiv.innerHTML = `
+            <label>${optionName}: <span class="variant-label-selected" data-option="${optionIndex}">${
+                  values[0]
+                }</span></label>
+            <div class="variant-color-buttons" data-option-index="${optionIndex}">
+              ${values
+                .map((value, idx) => {
+                  const imageUrl = this.variantImages[value] || this.currentProduct.featured_image;
+                  return `
+                    <button type="button" 
+                      class="variant-color-btn ${idx === 0 ? 'active' : ''}" 
+                      data-value="${value}"
+                      data-image="${imageUrl}"
+                      style="background-image: url('${imageUrl}')">
+                    </button>
+                  `;
+                })
+                .join('')}
+            </div>
+          `;
+              } else {
+                optionDiv.innerHTML = `
+            <label>${optionName}: <span class="variant-label-selected" data-option="${optionIndex}">${
+                  values[0]
+                }</span></label>
+            <div class="variant-buttons" data-option-index="${optionIndex}">
+              ${values
+                .map(
+                  (value, idx) => `
+                    <button type="button" class="variant-btn ${idx === 0 ? 'active' : ''}" data-value="${value}">
+                      ${value}
+                    </button>
+                  `
+                )
+                .join('')}
+            </div>
+          `;
+              }
+
+              variantsDiv.appendChild(optionDiv);
+            });
+
+            variantsDiv.querySelectorAll('.variant-btn, .variant-color-btn').forEach((btn) => {
+              btn.addEventListener('click', () => this.selectVariant(btn, variants));
+            });
+
+            const firstAvailableVariant = variants.find((v) => v.available) || variants[0];
+            if (firstAvailableVariant) {
+              document.getElementById('quickViewVariantId').value = firstAvailableVariant.id;
+            }
+          }
+
+          selectVariant(btn, variants) {
+            const container = btn.closest('.variant-buttons, .variant-color-buttons');
+            const optionIndex = parseInt(container.dataset.optionIndex);
+
+            container.querySelectorAll('.variant-btn, .variant-color-btn').forEach((b) => {
+              b.classList.remove('active');
+            });
+            btn.classList.add('active');
+
+            const label = document.querySelector(`[data-option="${optionIndex}"]`);
+            if (label) {
+              label.textContent = btn.dataset.value;
+            }
+
+            if (btn.classList.contains('variant-color-btn') && btn.dataset.image) {
+              this.changeMainImage(btn.dataset.image);
+            }
+
+            const selectedOptions = [];
+            document.querySelectorAll('.variant-buttons, .variant-color-buttons').forEach((div) => {
+              const activeBtn = div.querySelector('.variant-btn.active, .variant-color-btn.active');
+              if (activeBtn) {
+                selectedOptions.push(activeBtn.dataset.value);
+              }
+            });
+
+            const variant = variants.find((v) => {
+              return v.options.every((opt, i) => opt === selectedOptions[i]);
+            });
+
+            if (variant) {
+              document.getElementById('quickViewVariantId').value = variant.id;
+
+              const addBtn = document.getElementById('quickViewAddToCart');
+              if (variant.available) {
+                addBtn.disabled = false;
+                addBtn.querySelector('.btn-text').textContent = 'Tilføj til kurv';
+              } else {
+                addBtn.disabled = true;
+                addBtn.querySelector('.btn-text').textContent = 'Sold Out';
+              }
+            }
+          }
+
+          async addToCart() {
+            const btn = document.getElementById('quickViewAddToCart');
+            const variantId = document.getElementById('quickViewVariantId').value;
+            const quantity = parseInt(document.getElementById('quickViewQuantity').value);
+
+            btn.disabled = true;
+            btn.querySelector('.btn-text').style.display = 'none';
+            btn.querySelector('.btn-loading').style.display = 'inline';
+
+            try {
+              const response = await fetch('/cart/add.js', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: variantId, quantity: quantity }),
+              });
+
+              if (response.ok) {
+                alert('Product added to cart!');
+                this.close();
+
+                if (window.theme && window.theme.cart) {
+                  window.theme.cart.refresh();
+                }
+              } else {
+                throw new Error('Failed to add to cart');
+              }
+            } catch (error) {
+              console.error('Error:', error);
+              alert('Error adding to cart. Please try again.');
+            } finally {
+              btn.disabled = false;
+              btn.querySelector('.btn-text').style.display = 'inline';
+              btn.querySelector('.btn-loading').style.display = 'none';
+            }
+          }
+        }
+
+        window.updateQuantity = function (delta) {
+          const input = document.getElementById('quickViewQuantity');
+          let value = parseInt(input.value) + delta;
+          if (value < 1) value = 1;
+          input.value = value;
+        };
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => new QuickView());
+        } else {
+          new QuickView();
+        }
+      })();
+    </script>
+
+    {% comment %}
+      ===========================================
+      STEP 2: product-item.liquid mein quick view button already hai
+      Line 40-46 pe check karein:
+      ===========================================
+
+      <button class="quick-view-btn" data-product-handle="{{ product.handle }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+      </button>
+
+      Button already correct hai. Bas theme.liquid code add karna hai.
+    {% endcomment %}
+  </body>
+</html>

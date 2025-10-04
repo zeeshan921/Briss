@@ -1,0 +1,392 @@
+{% comment %}
+  Custom Mobile Menu by Your Shopify Developer
+  - Uses custom classes prefixed with 'cmm-' to avoid conflicts.
+  - Implements a swipe/slide effect for nested menus.
+  - Self-contained with HTML, CSS, JS, and Schema.
+{% endcomment %}
+
+<div id="CustomMobileMenu" class="cmm-drawer">
+  <div class="cmm-overlay" data-cmm-close></div>
+
+  <div class="cmm-panel-container">
+    <div class="cmm-main-panel">
+      <div class="cmm-header">
+        <button type="button" class="cmm-close-btn" data-cmm-close title="Close menu">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="cmm-menu-wrapper">
+        <div class="cmm-menu-list cmm-menu-list--level-1 is-active" id="cmm-main-menu">
+          <ul class="cmm-links">
+            {%- for link in section.settings.menu.links -%}
+              <li class="cmm-link-item">
+                {%- if link.links != blank -%}
+                  <a href="#" class="cmm-link cmm-link--has-children" data-cmm-target="cmm-submenu-{{ forloop.index }}">
+                    <span>{{ link.title }}</span>
+                    <svg
+                      class="cmm-arrow"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="20"
+                      height="20"
+                      fill="currentColor"
+                    >
+                      <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                    </svg>
+                  </a>
+                {%- else -%}
+                  <a href="{{ link.url }}" class="cmm-link">
+                    <span>{{ link.title }}</span>
+                  </a>
+                {%- endif -%}
+              </li>
+            {%- endfor -%}
+            <li class="cmm-link-item account">
+              <a href="/account">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 12.413a4.358 4.358 0 1 0 0-8.715 4.358 4.358 0 0 0 0 8.715zM3.488 20.857c0-3.085 1.594-5.61 5.26-5.61h6.503c3.667 0 5.261 2.525 5.261 5.61" stroke="currentColor" stroke-width="1.2" stroke-miterlimit="10"></path>
+                </svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        {%- comment -%} Level 2 Menus {%- endcomment -%}
+        {%- for link in section.settings.menu.links -%}
+          {%- if link.links != blank -%}
+            <div class="cmm-menu-list cmm-menu-list--level-2" id="cmm-submenu-{{ forloop.index }}">
+              <div class="cmm-submenu-header">
+                <button type="button" class="cmm-back-btn" data-cmm-back title="Back">
+                  <svg
+                    class="cmm-arrow cmm-arrow--back"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                  >
+                    <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/>
+                  </svg>
+                  <span>{{ link.title }}</span>
+                </button>
+              </div>
+              <ul class="cmm-links">
+                {%- for child_link in link.links -%}
+                  <li class="cmm-link-item">
+                    {%- if child_link.links != blank -%}
+                      <a
+                        href="#"
+                        class="cmm-link cmm-link--has-children"
+                        data-cmm-target="cmm-grandchild-{{ forloop.parentloop.index }}-{{ forloop.index }}"
+                      >
+                        <span>{{ child_link.title }}</span>
+                        <svg
+                          class="cmm-arrow"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          width="20"
+                          height="20"
+                          fill="currentColor"
+                        >
+                          <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                        </svg>
+                      </a>
+                    {%- else -%}
+                      <a href="{{ child_link.url }}" class="cmm-link">
+                        <span>{{ child_link.title }}</span>
+                      </a>
+                    {%- endif -%}
+                  </li>
+                {%- endfor -%}
+              </ul>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- comment -%} Level 3 Menus {%- endcomment -%}
+        {%- for link in section.settings.menu.links -%}
+          {%- if link.links != blank -%}
+            {%- for child_link in link.links -%}
+              {%- if child_link.links != blank -%}
+                <div
+                  class="cmm-menu-list cmm-menu-list--level-3"
+                  id="cmm-grandchild-{{ forloop.parentloop.index }}-{{ forloop.index }}"
+                >
+                  <div class="cmm-submenu-header">
+                    <button type="button" class="cmm-back-btn" data-cmm-back title="Back">
+                      <svg
+                        class="cmm-arrow cmm-arrow--back"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        width="20"
+                        height="20"
+                        fill="currentColor"
+                      >
+                        <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/>
+                      </svg>
+                      <span>{{ child_link.title }}</span>
+                    </button>
+                  </div>
+                  <ul class="cmm-links">
+                    {%- for grandchild_link in child_link.links -%}
+                      <li class="cmm-link-item">
+                        <a href="{{ grandchild_link.url }}" class="cmm-link">
+                          <span>{{ grandchild_link.title }}</span>
+                        </a>
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+                </div>
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+      li.cmm-link-item a svg {
+        width: 30px;
+    }
+    li.cmm-link-item.account {
+      border-bottom: 1px solid #000;
+      padding: 16px 0 10px;
+  }
+          @media (min-width:1200px){
+           button.custom-burger-button.header__icon-wrapper.tap-area {
+              display: none;
+          }
+          }
+              :root {
+                --cmm-drawer-width: 100%;
+                --cmm-background: #ffffff;
+                --cmm-text-color: #031612;
+                --cmm-border-color: #031612;
+                --cmm-timing: 0.35s;
+                --cmm-easing: ease-in-out;
+              }
+
+              .cmm-drawer {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 1000;
+                visibility: hidden;
+                pointer-events: none;
+            margin-top: 114px;
+              }
+
+              .cmm-drawer.is-open {
+                visibility: visible;
+                pointer-events: auto;
+                right:0;
+              }
+
+              .cmm-body-lock {
+                overflow: hidden;
+              }
+
+              .cmm-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                opacity: 0;
+                transition: opacity var(--cmm-timing) var(--cmm-easing);
+              }
+
+              .cmm-drawer.is-open .cmm-overlay {
+                opacity: 1;
+              }
+
+              .cmm-panel-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                max-width: var(--cmm-drawer-width);
+                height: 100%;
+                background-color: var(--cmm-background);
+                transform: translateX(-100%);
+                transition: transform var(--cmm-timing) var(--cmm-easing);
+                display: flex;
+                flex-direction: column;
+              }
+
+              .cmm-drawer.is-open .cmm-panel-container {
+                transform: translateX(0);
+              }
+
+              .cmm-main-panel {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                padding: 0 20px;
+              }
+
+              .cmm-header, .cmm-submenu-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 15px 0;
+                border-bottom: 1px solid var(--cmm-border-color);
+                flex-shrink: 0;
+              }
+
+              .cmm-submenu-header {
+                justify-content: flex-start;
+              }
+
+              .cmm-title {
+                margin: 0;
+                font-size: 1.2rem;
+                font-weight: 600;
+              }
+
+              .cmm-close-btn, .cmm-back-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 5px;
+                line-height: 0;
+                color: var(--cmm-text-color);
+                text-transform: uppercase;
+              }
+
+              .cmm-back-btn {
+                font-size: 1rem;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 5px 0;
+              }
+
+              .cmm-menu-wrapper {
+                position: relative;
+                overflow: hidden;
+                flex-grow: 1;
+              }
+
+              .cmm-menu-list {
+                position: absolute;
+                top: 0;
+                left: 100%;
+                width: 100%;
+                height: 100%;
+                background-color: var(--cmm-background);
+                transition: left var(--cmm-timing) var(--cmm-easing);
+                overflow-y: auto;
+                padding-bottom: 40px;
+              }
+
+              .cmm-menu-list.is-active {
+                left: 0;
+                z-index: 1;
+              }
+
+              .cmm-menu-list.is-child-active {
+                left: -100%;
+                z-index: 0;
+              }
+
+              .cmm-links {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+              }
+
+              .cmm-link-item--all {
+                background-color: #f7f7f7;
+              }
+
+             .cmm-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            text-decoration: none;
+            color: var(--cmm-text-color);
+            font-size: 18px;
+            border-bottom: 1px solid var(--cmm-border-color);
+            transition: background-color 0.2s;
+            text-transform: uppercase;
+        }
+
+              .cmm-arrow {
+          flex-shrink: 0;
+          color: #031612;
+          width: 30px;
+          height: 30px;
+      }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const drawer = document.getElementById('CustomMobileMenu');
+    if (!drawer) return;
+
+    const openTriggers = document.querySelectorAll('[data-cmm-open]');
+    const closeTriggers = drawer.querySelectorAll('[data-cmm-close]');
+    const menuWrapper = drawer.querySelector('.cmm-menu-wrapper');
+    const nextTriggers = drawer.querySelectorAll('[data-cmm-target]');
+    const backTriggers = drawer.querySelectorAll('[data-cmm-back]');
+
+    const openMenu = () => {
+      drawer.classList.add('is-open');
+      document.body.classList.add('cmm-body-lock');
+    };
+
+    const closeMenu = () => {
+      drawer.classList.remove('is-open');
+      document.body.classList.remove('cmm-body-lock');
+
+      // Reset all panels to initial state on close
+      setTimeout(() => {
+        const allPanels = drawer.querySelectorAll('.cmm-menu-list');
+        allPanels.forEach((panel) => {
+          panel.classList.remove('is-active', 'is-child-active');
+        });
+        drawer.querySelector('#cmm-main-menu').classList.add('is-active');
+      }, 350); // Match this with CSS transition duration
+    };
+
+    const goToNextPanel = (e) => {
+      e.preventDefault();
+      const targetId = e.currentTarget.dataset.cmmTarget;
+      const targetPanel = document.getElementById(targetId);
+
+      if (targetPanel) {
+        const currentPanel = e.currentTarget.closest('.cmm-menu-list');
+        currentPanel.classList.add('is-child-active');
+        currentPanel.classList.remove('is-active');
+        targetPanel.classList.add('is-active');
+      }
+    };
+
+    const goToPrevPanel = (e) => {
+      const currentPanel = e.currentTarget.closest('.cmm-menu-list');
+      const parentPanel = menuWrapper.querySelector('.is-child-active');
+
+      if (parentPanel) {
+        currentPanel.classList.remove('is-active');
+        parentPanel.classList.remove('is-child-active');
+        parentPanel.classList.add('is-active');
+      }
+    };
+
+    openTriggers.forEach((trigger) => trigger.addEventListener('click', openMenu));
+    closeTriggers.forEach((trigger) => trigger.addEventListener('click', closeMenu));
+    nextTriggers.forEach((trigger) => trigger.addEventListener('click', goToNextPanel));
+    backTriggers.forEach((trigger) => trigger.addEventListener('click', goToPrevPanel));
+  });
+</script>

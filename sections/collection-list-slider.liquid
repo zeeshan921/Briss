@@ -1,0 +1,159 @@
+{% schema %}
+{
+  "name": "Collections Lists",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title",
+      "default": "Blog Categories"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category",
+      "settings": [
+        {
+          "type": "text",
+          "id": "category_name",
+          "label": "Category Name",
+          "default": "Category"
+        },
+        {
+          "type": "url",
+          "id": "category_link",
+          "label": "Category Link"
+        },
+        {
+          "type": "image_picker",
+          "id": "category_image",
+          "label": "Category Image"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collections Lists",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}
+
+<style>
+/* Existing CSS code */
+.title-and-tags {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.blog-categories {
+  list-style: none;
+  text-align: center;
+  padding: 0 5rem;
+  margin: 30px auto;
+  display: flex;
+  overflow-x: auto;
+  position: relative;
+  z-index: 1;
+  max-width: 1500px;
+  gap: 10px;
+}
+
+.blog-categories::-webkit-scrollbar-thumb {
+  background-color: #1c4932;
+  border-radius: 0rem;
+}
+
+.blog-categories::-webkit-scrollbar {
+  background-color: #1c4932;
+  height: .125rem;
+}
+
+.blog-categories li {
+  margin: 0 0;
+  width: 100%;
+}
+
+.blog-categories li a {
+  display: block;
+  line-height: 1.2rem;
+  font-size: 13px;
+  color: #1B3327;
+    text-decoration: none;
+    background-color: transparent;
+    border: 1px solid #1B3327;
+  border-radius: 0px;
+  padding: 5px 10px 5px 10px;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: all 0.4s ease-out;
+  margin-bottom: 20px;
+}
+
+.blog-categories li a:hover,
+.blog-categories li a.active {
+  color: #fff;
+  border: 1px solid #EDA069;
+  background-color: #EDA069;
+}
+
+.blog-categories li a img {
+  max-width: 30px;
+  height: auto;
+  display: block;
+  margin-right:5px;
+}
+
+.blog-categories li a > span {
+  display: flex;
+  align-items: center;
+  position: relative;
+  justify-content: center;
+  z-index: 9;
+  min-height: 30px;
+}
+
+@media screen and (max-width: 990px) {
+  .blog-categories {
+    padding: 0 1.5rem;
+  }
+}
+</style>
+
+{% if section.blocks.size > 0 %}
+  <ul class="blog-categories">
+    {% for block in section.blocks %}
+      <li>
+        <a href="{{ block.settings.category_link }}">
+          <span>
+            {% if block.settings.category_image %}
+              <img src="{{ block.settings.category_image | img_url: '300x300' }}" alt="{{ block.settings.category_name }}">
+            {% endif %}
+            {{ block.settings.category_name }}
+          </span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<script>
+// JavaScript to set the active class based on the current URL
+document.addEventListener("DOMContentLoaded", function() {
+  const currentUrl = window.location.pathname;
+  const categoryLinks = document.querySelectorAll(".blog-categories li a");
+
+  categoryLinks.forEach(link => {
+    if (link.getAttribute("href") === currentUrl) {
+      link.classList.add("active");
+    }
+  });
+});
+</script>
+
+

@@ -1,0 +1,346 @@
+<desktop-navigation>
+  <ul class="header__linklist list--unstyled" role="list">
+    {% for block in section.blocks %}
+      {% if block.type == 'menu_item' %}
+        <li
+          class="header__linklist-item {% if block.settings.menu_type == 'mega' or block.settings.menu_type == 'simple' %}has-dropdown{% endif %}"
+          data-item-title="{{ block.settings.main_title | escape }}"
+        >
+          <a
+            class="header__linklist-link link--animated font-14"
+            href="{{ block.settings.main_link }}"
+            {% if block.settings.menu_type == 'mega' or block.settings.menu_type == 'simple' %}
+              aria-controls="desktop-menu-{{ forloop.index }}" aria-expanded="false"
+            {% endif %}
+          >
+            {{- block.settings.main_title -}}
+
+            {%- comment -%} Arrow Icon for Mega & Simple Menus {%- endcomment -%}
+            {% if block.settings.menu_type == 'mega' or block.settings.menu_type == 'simple' %}
+              <svg
+                class="menu-arrow-icon"
+                width="12"
+                height="8"
+                viewBox="0 0 12 8"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            {% endif %}
+          </a>
+
+          {% if block.settings.menu_type == 'mega' %}
+            {%- comment -%} Mega Menu Structure {%- endcomment -%}
+            <div hidden id="desktop-menu-{{ forloop.index }}" class="mega-menu" {{ block.shopify_attributes }}>
+              <div class="container">
+                <div class="mega-menu__inner mega-menu__inner--custom">
+                  {%- comment -%} Column 1: Main Category {%- endcomment -%}
+                  <div class="mega-menu__column mega-menu__column--first">
+                    {% if block.settings.col1_main_title != blank %}
+                      <a href="{{ block.settings.col1_main_link }}" class="mega-menu__title heading heading--small">
+                        {{ block.settings.col1_main_title }}
+                      </a>
+                    {% endif %}
+
+                    {% if block.settings.col1_menu != blank %}
+                      <ul class="linklist list--unstyled" role="list">
+                        {% for link in linklists[block.settings.col1_menu].links %}
+                          <li class="linklist__item">
+                            <a href="{{ link.url }}" class="link--faded font-14">{{ link.title }}</a>
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    {% endif %}
+                  </div>
+
+                  {%- comment -%} Column 2: Multiple Categories {%- endcomment -%}
+                  <div class="mega-menu__column mega-menu__column--second">
+                    {%- comment -%} Category 1 {%- endcomment -%}
+                    {% if block.settings.col2_cat1_title != blank %}
+                      <div class="mega-menu__section">
+                        <a href="{{ block.settings.col2_cat1_link }}" class="mega-menu__title heading heading--small">
+                          {{ block.settings.col2_cat1_title }}
+                        </a>
+
+                        {% if block.settings.col2_cat1_menu != blank %}
+                          <ul class="linklist list--unstyled" role="list">
+                            {% for link in linklists[block.settings.col2_cat1_menu].links %}
+                              <li class="linklist__item">
+                                <a href="{{ link.url }}" class="link--faded">{{ link.title }}</a>
+                              </li>
+                            {% endfor %}
+                          </ul>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+
+                    {%- comment -%} Category 2 {%- endcomment -%}
+                    {% if block.settings.col2_cat2_title != blank %}
+                      <div class="mega-menu__section">
+                        <a href="{{ block.settings.col2_cat2_link }}" class="mega-menu__title heading heading--small">
+                          {{ block.settings.col2_cat2_title }}
+                        </a>
+
+                        {% if block.settings.col2_cat2_menu != blank %}
+                          <ul class="linklist list--unstyled" role="list">
+                            {% for link in linklists[block.settings.col2_cat2_menu].links %}
+                              <li class="linklist__item">
+                                <a href="{{ link.url }}" class="link--faded">{{ link.title }}</a>
+                              </li>
+                            {% endfor %}
+                          </ul>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+
+                    {%- comment -%} Category 3 {%- endcomment -%}
+                    {% if block.settings.col2_cat3_title != blank %}
+                      <div class="mega-menu__section">
+                        <a href="{{ block.settings.col2_cat3_link }}" class="mega-menu__title heading heading--small">
+                          {{ block.settings.col2_cat3_title }}
+                        </a>
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  {%- comment -%} Columns 3 & 4: Featured Products {%- endcomment -%}
+                  <div class="mega-menu__images-wrapper mega-menu__products-wrapper">
+                    {% if block.settings.featured_product_1 != blank %}
+                      {% assign product_1 = all_products[block.settings.featured_product_1] %}
+                      <a href="{{ product_1.url }}" class="mega-menu__image-push mega-menu__product-card image-zoom">
+                        <div class="mega-menu__image-wrapper">
+                          {% if product_1.compare_at_price > product_1.price %}
+                            {% assign savings = product_1.compare_at_price | minus: product_1.price %}
+                            <span class="mega-menu__savings-badge">{{- savings }} kr Saving</span>
+                          {% endif %}
+                          {{
+                            product_1.featured_image
+                            | image_url: width: 400
+                            | image_tag: loading: 'lazy', sizes: '240px', class: 'mega-menu__image'
+                          }}
+                        </div>
+                        <p class="mega-menu__heading heading heading--small">{{ product_1.title }}</p>
+                        <div class="mega-menu__product-price">
+                          {% if product_1.compare_at_price > product_1.price %}
+                            <span class="mega-menu__compare-price">{{- product_1.compare_at_price }} kr</span>
+                          {% endif %}
+                          <span class="mega-menu__price">{{ product_1.price }} kr</span>
+                        </div>
+                      </a>
+                    {% endif %}
+
+                    {% if block.settings.featured_product_2 != blank %}
+                      {% assign product_2 = all_products[block.settings.featured_product_2] %}
+                      <a href="{{ product_2.url }}" class="mega-menu__image-push mega-menu__product-card image-zoom">
+                        <div class="mega-menu__image-wrapper">
+                          {% if product_2.compare_at_price > product_2.price %}
+                            {% assign savings = product_2.compare_at_price | minus: product_2.price %}
+                            <span class="mega-menu__savings-badge">{{- savings }} kr Saving</span>
+                          {% endif %}
+                          {{
+                            product_2.featured_image
+                            | image_url: width: 400
+                            | image_tag: loading: 'lazy', sizes: '240px', class: 'mega-menu__image'
+                          }}
+                        </div>
+                        <p class="mega-menu__heading heading heading--small">{{ product_2.title }}</p>
+                        <div class="mega-menu__product-price">
+                          {% if product_2.compare_at_price > product_2.price %}
+                            <span class="mega-menu__compare-price">{{- product_2.compare_at_price }} kr</span>
+                          {% endif %}
+                          <span class="mega-menu__price">{{ product_2.price }} kr</span>
+                        </div>
+                      </a>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          {% elsif block.settings.menu_type == 'simple' %}
+            {%- comment -%} Simple Dropdown Menu {%- endcomment -%}
+            {% if block.settings.simple_menu != blank %}
+              <ul
+                hidden
+                id="desktop-menu-{{ forloop.index }}"
+                class="nav-dropdown nav-dropdown--restrict list--unstyled"
+                role="list"
+              >
+                {% for link in linklists[block.settings.simple_menu].links %}
+                  <li class="nav-dropdown__item">
+                    <a class="nav-dropdown__link link--faded font-14" href="{{ link.url }}">
+                      {{ link.title }}
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          {% endif %}
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</desktop-navigation>
+
+<style>
+    .mega-menu__column.mega-menu__column--second .mega-menu__section:first-child{
+    margin-top: 0;
+    }
+    .mega-menu__column.mega-menu__column--second .mega-menu__section{
+    margin-top: 40px;
+    }
+    .mega-menu__column.mega-menu__column--first {
+    border-right: 1px solid #bdbfbf;
+    }
+    nav.header__inline-navigation .font-14 {
+    font-size: 14px;
+    color:#000;
+    }
+    nav.header__inline-navigation  .menu-arrow-icon {
+    width: 10px;
+    margin-left: 3px;
+    }
+    .mega-menu__title.heading.heading--small {
+    color: #000;
+    font-family: Braun Linear, sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 16px !important;
+    transition:all 0.2s ease;
+    text-transform:capitalize;
+    }
+    .mega-menu__title.heading.heading--small:hover{
+    text-decoration: underline;
+    }
+    .mega-menu__inner .mega-menu__column ul.linklist a:hover {
+    text-decoration: underline;
+    color:#000 !important;
+    }
+    .mega-menu__inner .mega-menu__column ul.linklist {
+    padding-bottom: 36px;
+    }
+    .mega-menu__inner.mega-menu__inner--custom {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2.7fr;
+    gap:15px;
+    }
+    .mega-menu__image-wrapper {
+    position: relative;
+    padding-top: 100%;
+    }
+    .mega-menu__image-wrapper img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    }
+    span.mega-menu__savings-badge {
+    top: 7%;
+    bottom: unset !important;
+    position: absolute;
+    left: 5%;
+    display: flex;
+    padding: 6px 8px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: 0 2px 4px #0003;
+    color: #7d6452;
+    font-weight: 700;
+    line-height: 1;
+    z-index: 9;
+    font-size: 14px;
+    }
+    .mega-menu__images-wrapper.mega-menu__products-wrapper {
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    }
+    p.mega-menu__heading.heading.heading--small {
+    color: #000;
+    font-family: Braun Linear, sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 16px !important;
+    transition: all 0.2s ease;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 1;
+    }
+    .mega-menu__product-price {
+    font-size: 20px;
+    font-weight: 700;
+    color: #b08464;
+    }
+   .mega-menu__compare-price {
+      color: #a1a1a1;
+      font-weight: 500;
+      text-decoration-line: line-through;
+  }
+  @media (max-width:1200px){
+  desktop-navigation {
+      display: none;
+  }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const headerLinks = document.querySelectorAll('.header__linklist-item.has-dropdown');
+
+    headerLinks.forEach((item) => {
+      const link = item.querySelector('.header__linklist-link');
+      const dropdownId = link.getAttribute('aria-controls');
+
+      if (!dropdownId) return;
+
+      const dropdown = document.getElementById(dropdownId);
+      if (!dropdown) return;
+
+      let hoverTimeout;
+      let isOpen = false;
+
+      // Open dropdown on hover
+      item.addEventListener('mouseenter', function () {
+        clearTimeout(hoverTimeout);
+
+        if (!isOpen) {
+          dropdown.hidden = false;
+          link.setAttribute('aria-expanded', 'true');
+          isOpen = true;
+        }
+      });
+
+      // Close dropdown on leave
+      item.addEventListener('mouseleave', function () {
+        hoverTimeout = setTimeout(() => {
+          dropdown.hidden = true;
+          link.setAttribute('aria-expanded', 'false');
+          isOpen = false;
+        }, 150);
+      });
+
+      // Keep open when hovering dropdown
+      dropdown.addEventListener('mouseenter', function () {
+        clearTimeout(hoverTimeout);
+      });
+
+      dropdown.addEventListener('mouseleave', function () {
+        hoverTimeout = setTimeout(() => {
+          dropdown.hidden = true;
+          link.setAttribute('aria-expanded', 'false');
+          isOpen = false;
+        }, 150);
+      });
+    });
+  });
+</script>
