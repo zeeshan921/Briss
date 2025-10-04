@@ -218,11 +218,11 @@
 
           <div class="quick-view-details">
             <div class="quick-view-header">
-              <span class="quick-view-badge" id="quickViewBadge" style="display: none;"></span>
               <h2 class="quick-view-title" id="quickViewTitle"></h2>
               <p class="quick-view-vendor" id="quickViewVendor"></p>
               <div class="quick-view-price-wrapper">
-                <div class="quick-view-price" id="quickViewPrice"></div>
+                <div class="quick-view-price" id="quickViewPrice"></div> 
+                <span class="quick-view-badge" id="quickViewBadge" style="display: none;"></span>
               </div>
             </div>
 
@@ -303,7 +303,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: white;
-      max-width: 900px;
+      max-width: 768px;
       width: 90%;
       max-height: 90vh;
       overflow-y: auto;
@@ -374,7 +374,7 @@
 
       .quick-view-body {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 323px 1fr;
       gap: 0;
       }
 
@@ -415,10 +415,10 @@
       }
 
       .quick-view-badge {
-      background: #ff6b6b;
-      color: white;
+      background: #decad9;
+      color: #c31818;
       padding: 4px 12px;
-      font-size: 12px;
+      font-size: 16px;
       font-weight: 600;
       border-radius: 3px;
       align-self: flex-start;
@@ -437,6 +437,7 @@
       color: #102b26;
       font-size: 16px;
       margin: 0;
+      opacity: .7;
       }
       p#quickViewVendor a {
       text-decoration: none;
@@ -448,7 +449,7 @@
       gap: 10px;
       font-size: 16px;
       font-weight: 700;
-      color:red;
+      color:#c31818;
       }
 
       .quick-view-price .price--compare {
@@ -508,6 +509,16 @@
       min-width: 125px;
       text-align: center;
       }
+      .quick-view-details .variant-btn {
+        padding: 3px 20px;
+      }
+      .quick-view-details .quantity-btn {
+        padding: 0 5px;
+      }
+
+      .quick-view-details  #quickViewAddToCart{
+        padding: 10px;
+      }
 
       .variant-btn:hover:not(:disabled) {
       border-color: #102b26;
@@ -530,8 +541,8 @@
       }
 
       .variant-color-btn {
-      width: 50px;
-      height: 50px;
+      width: 40px;
+      height: 40px;
       border: 2px solid #d0d0d0;
       border-radius: 3px;
       cursor: pointer;
@@ -775,10 +786,8 @@
             }
 
             const descDiv = document.getElementById('quickViewDescription');
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = product.description || '';
-            const descText = tempDiv.textContent || '';
-            descDiv.textContent = descText.length > 5000 ? descText.substring(0, 5000) + '...' : descText;
+            const description = product.description || '';
+            descDiv.innerHTML = description.length > 5000 ? description.substring(0, 5000) + '...' : description;
 
             this.renderFeaturedImage(product);
             this.buildVariantImageMap(product);
@@ -1008,3 +1017,4 @@
     {% endcomment %}
   </body>
 </html>
+
