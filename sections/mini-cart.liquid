@@ -3,21 +3,10 @@
 
   <header class="drawer__header">
     <p class="drawer__title heading h6">
-      {%- case settings.cart_icon -%}
-        {%- when 'shopping_bag' -%}
-          {%- render 'icon' with 'header-cart' -%}
-
-        {%- when 'shopping_cart' -%}
-          {%- render 'icon' with 'header-shopping-cart' -%}
-
-        {%- when 'tote_bag' -%}
-          {%- render 'icon' with 'header-tote-bag' -%}
-      {%- endcase -%}
-
       {%- if cart.item_count == 0 -%}
-        {{- 'cart.general.title' | t -}}
+        Kurv
       {%- else -%}
-        {{- 'cart.general.item_count' | t: count: cart.item_count -}}
+      <p class="cart-top-title">Kurv . <span> {{- cart.item_count -}}</span></p>
       {%- endif -%}
     </p>
 
@@ -169,7 +158,7 @@
 
                   {%- capture line_item_properties -%}
                     {%- unless line_item.product.has_only_default_variant -%}
-                      <span class="product-item-meta__property text--subdued text--xsmall">{{ line_item.variant.title }}</span>
+                      <span class="product-item-meta__property text--subdued text--xsmall variant-title">{{ line_item.variant.title }}</span>
                     {%- endunless -%}
 
                     {%- if line_item.selling_plan_allocation -%}
