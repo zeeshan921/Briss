@@ -332,7 +332,7 @@
 
                 <div class="scroller">
                   <div class="scroller__inner">
-                    <div class="mini-cart__recommendations-list">
+                    <div class="mini-cart__recommendations-list" style="display: flex; flex-direction: column; gap: 12px;">
                       {%- assign shown_products_count = 0 -%}
 
                       {%- for product in recommendations.products -%}
@@ -344,7 +344,7 @@
 
                         {%- if matching_product.size == 0 -%}
                           {%- assign shown_products_count = shown_products_count | plus: 1 -%}
-                          {%- render 'product-item', product: product, reduced_content: true, reduced_font_size: true, hide_secondary_image: true, sizes_attribute: '(max-width: 740px) 65px, 92px' -%}
+                          {%- render 'product-item-cart-recommendation', product: product -%}
                         {%- endif -%}
                       {%- endfor -%}
                     </div>

@@ -1,0 +1,282 @@
+<style>
+  .cart-rec-product {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: #f8f8f8;
+    border-radius: 8px;
+    align-items: center;
+  }
+
+  .cart-rec-product__image {
+    width: 90px;
+    height: 120px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 4px;
+  }
+
+  .cart-rec-product__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cart-rec-product__details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cart-rec-product__form {
+    display: contents;
+  }
+
+  .cart-rec-product__title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #000;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-align: left;
+    margin-bottom: 0;
+  }
+
+  .cart-rec-product__price {
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    color: #000;
+  }
+
+  .cart-rec-product__variant-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23333' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .cart-rec-product__add-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .cart-rec-product__add-btn:hover {
+    background: #333;
+  }
+
+  .cart-rec-product__add-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+
+  .cart-rec-product__add-btn.loading {
+    opacity: 0.7;
+    position: relative;
+  }
+
+  .cart-rec-product__add-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    top: 50%;
+    left: 50%;
+    margin-left: -7px;
+    margin-top: -7px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: cart-rec-spinner 0.6s linear infinite;
+  }
+
+  @keyframes cart-rec-spinner {
+    to { transform: rotate(360deg); }
+  }
+
+  @media screen and (max-width: 740px) {
+    .cart-rec-product {
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .cart-rec-product__image {
+      width: 80px;
+      height: 100px;
+    }
+
+    .cart-rec-product__title {
+      font-size: 14px;
+    }
+
+    .cart-rec-product__price {
+      font-size: 16px;
+    }
+  }
+  .cart-rec-product__form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+</style>
+
+{%- capture form_id -%}cart_rec_form_{{ section.id }}_{{ product.id }}_{{ block.id | default: 'rec' }}{%- endcapture -%}
+
+<div class="cart-rec-product" data-product-id="{{ product.id }}">
+  <div class="cart-rec-product__image">
+    {%- if product.featured_media -%}
+      {{ product.featured_media | image_url: width: 200 | image_tag: loading: 'lazy', alt: product.title }}
+    {%- endif -%}
+  </div>
+
+  <div class="cart-rec-product__details">
+    <h3 class="cart-rec-product__title">{{ product.title }}</h3>
+    
+    <div class="cart-rec-product__price">
+      {%- if settings.currency_code_enabled -%}
+        <span data-product-price>{{ product.selected_or_first_available_variant.price | money_with_currency }}</span>
+      {%- else -%}
+        <span data-product-price>{{ product.selected_or_first_available_variant.price | money }}</span>
+      {%- endif -%}
+    </div>
+
+    {%- form 'product', product, is: 'product-form', id: form_id, class: 'cart-rec-product__form' -%}
+      <input type="hidden" name="quantity" value="1">
+      
+      {%- if product.variants.size > 1 -%}
+        <select 
+          name="id" 
+          class="cart-rec-product__variant-select" 
+          data-variant-select
+          data-product-price-target
+        >
+          {%- for variant in product.variants -%}
+            <option 
+              value="{{ variant.id }}" 
+              data-price="{{ variant.price }}"
+              {% unless variant.available %}disabled{% endunless %}
+            >
+              {{ variant.title }}{% unless variant.available %} - {{ 'collection.product.sold_out' | t }}{% endunless %}
+            </option>
+          {%- endfor -%}
+        </select>
+      {%- else -%}
+        <input type="hidden" name="id" value="{{ product.first_available_variant.id }}">
+      {%- endif -%}
+
+      <button 
+        type="submit"
+        class="cart-rec-product__add-btn" 
+        {% unless product.available %}disabled{% endunless %}
+      >
+        {%- if product.available -%}
+            Tilføj til kurv
+        {%- else -%}
+          {{ 'collection.product.sold_out' | t }}
+        {%- endif -%}
+      </button>
+    {%- endform -%}
+  </div>
+</div>
+
+<script>
+(function() {
+  // Wait for DOM to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCartRecProducts);
+  } else {
+    initCartRecProducts();
+  }
+
+  function initCartRecProducts() {
+    const productCards = document.querySelectorAll('.cart-rec-product');
+    
+    productCards.forEach(card => {
+      // Skip if already initialized
+      if (card.dataset.initialized) return;
+      card.dataset.initialized = 'true';
+      
+      const variantSelect = card.querySelector('[data-variant-select]');
+      const priceEl = card.querySelector('[data-product-price]');
+      const form = card.querySelector('.cart-rec-product__form');
+      const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+      
+      // Update price when variant changes
+      if (variantSelect && priceEl) {
+        variantSelect.addEventListener('change', function() {
+          const selectedOption = this.options[this.selectedIndex];
+          const newPrice = selectedOption.getAttribute('data-price');
+          const isAvailable = !selectedOption.disabled;
+          
+          // Update price display
+          if (newPrice) {
+            const formattedPrice = formatMoneyRec(parseInt(newPrice));
+            priceEl.textContent = formattedPrice;
+          }
+          
+          // Update button state
+          if (submitBtn) {
+            submitBtn.disabled = !isAvailable;
+          }
+        });
+      }
+      
+      // Listen for successful variant:added event from the form
+      if (form) {
+        form.addEventListener('variant:added', function(event) {
+          // Hide the product card with animation
+          card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+          card.style.opacity = '0';
+          card.style.transform = 'translateX(20px)';
+          
+          setTimeout(() => {
+            card.remove();
+            
+            // Check if there are any recommendations left
+            const recList = document.querySelector('.mini-cart__recommendations-list');
+            if (recList && recList.querySelectorAll('.cart-rec-product').length === 0) {
+              // Hide the entire recommendations section if empty
+              const recSection = document.querySelector('.mini-cart__recommendations-inner');
+              if (recSection) {
+                recSection.style.display = 'none';
+              }
+            }
+          }, 300);
+        });
+      }
+    });
+    
+    // Money formatting function
+    function formatMoneyRec(cents) {
+      const format = '{{ settings.money_format }}';
+      if (typeof Shopify !== 'undefined' && Shopify.formatMoney) {
+        return Shopify.formatMoney(cents, format);
+      }
+      // Fallback formatting
+      const amount = (cents / 100).toFixed(2);
+      return format.replace(/\{\{\s*amount\s*\}\}/, amount);
+    }
+  }
+})();
+</script>
+

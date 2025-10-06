@@ -240,7 +240,7 @@
   <div class="product-variants-list">
     {%- assign limit = 4 -%} 
     {%- for variant in product.variants limit: limit -%}
-      <span>{{ variant.title }}</span>
+      <span>{{ variant.title | split: '/' | last | strip }}</span>
     {%- endfor -%}
 
     {%- assign remaining = product.variants.size | minus: limit -%}

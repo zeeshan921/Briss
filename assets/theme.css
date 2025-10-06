@@ -7012,7 +7012,7 @@ input:checked + .popover__choice-label:is(:lang(ae), :lang(ar), :lang(arc), :lan
 .mini-cart__recommendations-inner {
   margin-block-start: 24px;
   margin-inline: calc(-1 * var(--container-gutter));
-  padding: 16px var(--container-gutter);
+  padding: 16px 30px;
   background: rgb(var(--secondary-background));
 }
 
